@@ -10,6 +10,7 @@ use Symfony\Component\Form\Exception\FormException;
 use Shtumi\UsefulBundle\Form\DataTransformer\EntityToPropertyTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class AjaxAutocompleteType extends AbstractType
 {
@@ -19,14 +20,13 @@ class AjaxAutocompleteType extends AbstractType
     {
         $this->container = $container;
     }
-
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
-    {
+    
+    public function configureOptions(OptionsResolver $resolver) {
         $resolver->setDefaults(array(
-            'entity_alias'      => null,
-            'class'             => null,
-            'property'          => null,
-            'compound'          => false
+            'entity_alias' => null,
+            'class' => null,
+            'property' => null,
+            'compound' => false,
         ));
     }
 
