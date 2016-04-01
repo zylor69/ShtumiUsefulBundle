@@ -3,72 +3,70 @@
 namespace Shtumi\UsefulBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class AjaxAutocompleteJSONController extends Controller
 {
-
-    public function getJSONAction()
+    /**
+     * @param Request $request
+     * @return Response
+     * @throws \Exception
+     */
+    public function getJSONAction(Request $request)
     {
-
         $em = $this->get('doctrine')->getManager();
-        $request = $this->getRequest();
 
         $entities = $this->get('service_container')->getParameter('shtumi.autocomplete_entities');
 
         $entity_alias = $request->get('entity_alias');
         $entity_inf = $entities[$entity_alias];
 
-        if (false === $this->get('security.context')->isGranted( $entity_inf['role'] )) {
-            throw new AccessDeniedException();
-        }
+        $this->denyAccessUnlessGranted($entity_inf['role'], null, 'Unable to access this page!');
 
         $letters = $request->get('letters');
         $maxRows = $request->get('maxRows');
 
-        switch ($entity_inf['search']){
+        switch ($entity_inf['search']) {
             case "begins_with":
                 $like = $letters . '%';
-            break;
+                break;
             case "ends_with":
                 $like = '%' . $letters;
-            break;
+                break;
             case "contains":
                 $like = '%' . $letters . '%';
-            break;
+                break;
             default:
                 throw new \Exception('Unexpected value of parameter "search"');
         }
 
-	$property = $entity_inf['property'];
+        $property = $entity_inf['property'];
 
         if ($entity_inf['case_insensitive']) {
-                $where_clause_lhs = 'WHERE LOWER(e.' . $property . ')';
-                $where_clause_rhs = 'LIKE LOWER(:like)';
+            $where = 'WHERE LOWER(e.' . $property . ')';
+            $where .= ' LIKE LOWER(:like)';
         } else {
+            $where = 'WHERE e.' . $property;
+            $where .= ' LIKE :like';
 
-                $where_clause_lhs = 'WHERE e.' . $property;
-                $where_clause_rhs = 'LIKE :like';
         }
 
-
+        if ($entity_inf['where']) {
+            $where .= ' AND e.' . $entity_inf['where'];
+        }
 
         $results = $em->createQuery(
             'SELECT e.' . $property . '
              FROM ' . $entity_inf['class'] . ' e ' .
-             $where_clause_lhs . ' ' . $where_clause_rhs . ' ' .
+            $where . ' ' .
             'ORDER BY e.' . $property)
-            ->setParameter('like', $like )
+            ->setParameter('like', $like)
             ->setMaxResults($maxRows)
             ->getScalarResult();
 
         $res = array();
-        foreach ($results AS $r){
+        foreach ($results AS $r) {
             $res[] = $r[$entity_inf['property']];
         }
 
