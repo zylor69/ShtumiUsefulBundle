@@ -42,6 +42,8 @@ class Configuration implements ConfigurationInterface
                                 ->defaultValue('begins_with')
                                 ->cannotBeEmpty()
                             ->end()
+                            ->scalarNode('where')
+                            ->end()
 			    ->booleanNode('case_insensitive')
                                  ->defaultTrue()
                             ->end()
