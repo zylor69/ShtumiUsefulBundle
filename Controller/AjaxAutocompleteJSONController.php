@@ -52,7 +52,7 @@ class AjaxAutocompleteJSONController extends Controller
 
         }
 
-        if ($entity_inf['where']) {
+        if (!empty($entity_inf['where'])) {
             $where .= ' AND e.' . $entity_inf['where'];
         }
 
